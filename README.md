@@ -1,1 +1,1 @@
-# m5stickc_linx_default_personality
+# M5StickC LINX Default Personality
