@@ -13,6 +13,8 @@ boolean restartReq;
 const esp_partition_t *nup;
 esp_ota_handle_t otaHandle;
 
+int (*subCmds[16])(unsigned char, unsigned char*, unsigned char*, unsigned char*);
+
 void setup()
 {
   LinxDevice = new LinxESP32();
@@ -44,7 +46,7 @@ void loop()
       // Wait until receiving the disconnect command
       while (LinxWifiConnection.State != CLOSE) LinxWifiConnection.CheckForCommands();
       //while (LinxSerialConnection.State != CLOSE) LinxSerialConnection.CheckForCommands();
-      
+
       // Wait a little bit
       delay(500);
     }
@@ -85,7 +87,7 @@ int otaCommand(unsigned char numInputBytes, unsigned char* input, unsigned char*
     response[3] = 0x1; // ret_code = not enough arguments
     return 0;
   }
-  
+
   esp_err_t ret; // typedef int32_t esp_err_t
 
   uint8_t subcmd = input[0]; // subcommand
@@ -116,6 +118,29 @@ int otaCommand(unsigned char numInputBytes, unsigned char* input, unsigned char*
   esp_error_t_to_ret_code(ret, response); // ret_code
   *numResponseBytes = 4;
   return 0;
+}
+
+int subCommand(unsigned char numInputBytes, unsigned char* input, unsigned char* numResponseBytes, unsigned char* response)
+{
+  // ret_code_cmd : uint8_t
+  // ret_code_subcmd ...
+
+  if (numInputBytes < 1) {
+    response[0] = 0x1; // ret_code = not enough arguments
+    return 0;
+  }
+
+  // Call a subcommand
+  int ret = subCmds[input[0]](numInputBytes - 1, input + 1, numResponseBytes, response + 1);
+
+  (*numResponseBytes)++;
+
+  return ret;
+}
+
+void attachSubCommand(unsigned short subCmdNum, int (*func)(unsigned char, unsigned char*, unsigned char*, unsigned char*))
+{
+  subCmds[subCmdNum] = func;
 }
 
 void esp_error_t_to_ret_code(esp_err_t ret, unsigned char* buf)
