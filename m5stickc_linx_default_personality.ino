@@ -8,7 +8,7 @@ const char PERSONALITY_VERSION[8] = "v1.0.0";
 
 LinxESP32 *LinxDevice;
 
-boolean restartReq;
+bool restartReq;
 
 const esp_partition_t *nup;
 esp_ota_handle_t otaHandle;
